@@ -9,6 +9,7 @@ export default function Home() {
   const [isLoggingIn, setIsLoggingIn] = useState(false);
   const [showLogin, setShowLogin] = useState(true);
   const [elapsed, setElapsed] = useState<number | null>(null);
+  const [winSize, setWinSize] = useState({ w: 1000, h: 1000 });
 
   useEffect(() => {
     if (showLogin) {
@@ -16,6 +17,11 @@ export default function Home() {
     } else {
       document.body.style.overflow = 'auto';
     }
+
+    setWinSize({ w: window.innerWidth, h: window.innerHeight });
+    const handleResize = () => setWinSize({ w: window.innerWidth, h: window.innerHeight });
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
   }, [showLogin]);
 
   const handleLogin = (e: React.FormEvent) => {
@@ -29,7 +35,7 @@ export default function Home() {
       const currentElapsed = time - start;
       setElapsed(currentElapsed);
 
-      if (currentElapsed < 2500) {
+      if (currentElapsed < 2800) {
         requestAnimationFrame(animate);
       } else {
         setShowLogin(false);
@@ -55,30 +61,76 @@ export default function Home() {
       phase1Progress = 1;
       const rawProgress = Math.min((elapsed - phase1Duration) / phase2Duration, 1);
       // ease-in curve for swift unzipping
-      zipProgress = rawProgress * rawProgress * rawProgress; 
+      zipProgress = rawProgress * rawProgress * rawProgress;
     }
   }
 
   // --- Zipper Math ---
-  const planeY = phase === 2 ? -10 + zipProgress * 150 : -20; // -20 hidden during phase 1 initially
+  const planeY = phase === 2 ? -10 + zipProgress * 150 : -20;
+  const displayPlaneY = phase === 2 ? planeY : 0;
+
   const zipTop = Math.min(100, zipProgress * 130);
   const zipBottom = Math.min(100, Math.max(0, (zipProgress - 0.7) * 400));
 
-  const leftClip = isLoggingIn && phase === 2 ? `polygon(0 0, ${100 - zipTop}% 0, ${100 - zipBottom}% ${planeY}vh, ${100 - zipBottom}% 100%, 0 100%)` : 'none';
-  const rightClip = isLoggingIn && phase === 2 ? `polygon(${zipTop}% 0, 100% 0, 100% 100%, ${zipBottom}% 100%, ${zipBottom}% ${planeY}vh)` : 'none';
+  const W = winSize.w;
+  const H = winSize.h;
+  const P_Y = (displayPlaneY / 100) * H;
 
-  const planeOpacity = phase === 1 ? Math.min(phase1Progress * 3, 1) : 1; 
-  const displayPlaneY = phase === 2 ? planeY : 0;
-  const planeScale = phase === 1 ? 1 + (1 - phase1Progress) : 1; 
+  const gapRadius = (zipTop / 100) * (W / 2);
+  const gapBottomRadius = (zipBottom / 100) * (W / 2);
+
+  // Left Panel Coordinates (Global to screen, mapped to local inside path)
+  const TR_x = W / 2 - gapRadius;
+  const V_L_x = W / 2 - gapBottomRadius;
+  const CP1_L_x = W / 2 - gapRadius - gapBottomRadius;
+  const CP2_L_x = W / 2 - (gapRadius * 0.15) - gapBottomRadius;
+
+  const TR = `${TR_x} 0`;
+  const V_L = `${V_L_x} ${P_Y}`;
+  const CP1_L = `${CP1_L_x} ${P_Y * 0.4}`;
+  const CP2_L = `${CP2_L_x} ${P_Y * 0.8}`;
+
+  // Right Panel Coordinates
+  const TL_R_x = W / 2 + gapRadius;
+  const V_R_x = W / 2 + gapBottomRadius;
+  const CP1_R_x = W / 2 + gapRadius + gapBottomRadius;
+  const CP2_R_x = W / 2 + (gapRadius * 0.15) + gapBottomRadius;
+
+  const TL_R = `${TL_R_x} 0`;
+  const V_R = `${V_R_x} ${P_Y}`;
+  const CP1_R = `${CP1_R_x} ${P_Y * 0.4}`;
+  const CP2_R = `${CP2_R_x} ${P_Y * 0.8}`;
+
+  // Left clip uses local coordinates (0 to W/2)
+  const leftClip = isLoggingIn && phase === 2 ? `path('M 0 0 L ${TR} C ${CP1_L}, ${CP2_L}, ${V_L} L ${V_L_x} ${H} L 0 ${H} Z')` : 'none';
+
+  // Right clip uses local coordinates (0 to W/2, where 0 is center of screen)
+  const W_half = W / 2;
+  const R_TL = `${TL_R_x - W_half} 0`;
+  const R_TR = `${W} 0`; // use W to heavily overshoot the right edge to prevent gap
+  const R_BR = `${W} ${H}`;
+  const R_BL = `${V_R_x - W_half} ${H}`;
+  const R_V = `${V_R_x - W_half} ${P_Y}`;
+  const R_CP1 = `${CP1_R_x - W_half} ${P_Y * 0.4}`;
+  const R_CP2 = `${CP2_R_x - W_half} ${P_Y * 0.8}`;
+
+  const rightClip = isLoggingIn && phase === 2 ? `path('M ${R_TL} L ${R_TR} L ${R_BR} L ${R_BL} L ${R_V} C ${R_CP2}, ${R_CP1}, ${R_TL} Z')` : 'none';
+
+  // Bevel paths use global screen coordinates (0 to W)
+  const leftBevelPath = `M ${TR} C ${CP1_L}, ${CP2_L}, ${V_L} L ${V_L_x} ${H}`;
+  const rightBevelPath = `M ${TL_R} C ${CP1_R}, ${CP2_R}, ${V_R} L ${V_R_x} ${H}`;
+
+  const planeOpacity = phase === 1 ? Math.min(phase1Progress * 3, 1) : 1;
+  const planeScale = phase === 1 ? 1 + (1 - phase1Progress) : 1;
 
   const TEETH_COUNT = 24;
   const teeth = Array.from({ length: TEETH_COUNT }).map((_, i) => {
     const toothY = (i / TEETH_COUNT) * 100;
-    
+
     const popDelay = i * (phase1Duration / TEETH_COUNT);
     let scale = 0;
     if (elapsed !== null && elapsed > popDelay) {
-      const t = Math.min((elapsed - popDelay) / 250, 1); 
+      const t = Math.min((elapsed - popDelay) / 250, 1);
       const c1 = 1.70158;
       const c3 = c1 + 1;
       scale = t === 1 ? 1 : 1 + c3 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2);
@@ -88,13 +140,13 @@ export default function Home() {
     let outRotate = 0;
     let opacity = 1;
     if (phase === 2 && displayPlaneY > toothY) {
-      const outT = Math.min((displayPlaneY - toothY) / 10, 1); 
-      scale = Math.max(0, 1 - outT); 
-      outTranslateX = outT * 60; 
+      const outT = Math.min((displayPlaneY - toothY) / 10, 1);
+      scale = Math.max(0, 1 - outT);
+      outTranslateX = outT * 60;
       outRotate = outT * 60;
       opacity = 1 - outT;
     }
-    
+
     return { id: i, toothY, scale, outTranslateX, outRotate, opacity };
   });
 
@@ -116,6 +168,7 @@ export default function Home() {
             className="split-left"
             style={{
               clipPath: leftClip,
+              WebkitClipPath: leftClip,
               filter: isLoggingIn && phase === 2 ? 'drop-shadow(15px 0 25px rgba(0,0,0,0.8))' : 'none',
               transition: 'none'
             }}
@@ -170,6 +223,7 @@ export default function Home() {
             className="split-right"
             style={{
               clipPath: rightClip,
+              WebkitClipPath: rightClip,
               filter: isLoggingIn && phase === 2 ? 'drop-shadow(-15px 0 25px rgba(0,0,0,0.8))' : 'none',
               transition: 'none'
             }}
@@ -215,7 +269,7 @@ export default function Home() {
           {/* --- ZIPPER OVERLAYS --- */}
           {isLoggingIn && (
             <div style={{ position: 'fixed', inset: 0, zIndex: 60, pointerEvents: 'none' }}>
-              
+
               {/* Seam Line */}
               {seamHeight > 0 && seamHeight > seamTop && (
                 <div style={{
@@ -273,17 +327,15 @@ export default function Home() {
               {/* V-Shape Bevel Highlights (SVG) */}
               {phase === 2 && (
                 <svg style={{ position: 'absolute', inset: 0, width: '100vw', height: '100vh' }}>
-                  <line x1={`${50 * (1 - zipTop/100)}vw`} y1="0" x2={`${50 * (1 - zipBottom/100)}vw`} y2={`${displayPlaneY}vh`} stroke="rgba(255,255,255,0.9)" strokeWidth="1.5" />
-                  <line x1={`${50 * (1 - zipBottom/100)}vw`} y1={`${displayPlaneY}vh`} x2={`${50 * (1 - zipBottom/100)}vw`} y2="100vh" stroke="rgba(255,255,255,0.9)" strokeWidth="1.5" />
-                  <line x1={`${50 + 50 * (zipTop/100)}vw`} y1="0" x2={`${50 + 50 * (zipBottom/100)}vw`} y2={`${displayPlaneY}vh`} stroke="rgba(255,255,255,0.9)" strokeWidth="1.5" />
-                  <line x1={`${50 + 50 * (zipBottom/100)}vw`} y1={`${displayPlaneY}vh`} x2={`${50 + 50 * (zipBottom/100)}vw`} y2="100vh" stroke="rgba(255,255,255,0.9)" strokeWidth="1.5" />
+                  <path d={leftBevelPath} stroke="rgba(255,255,255,0.9)" strokeWidth="1.5" fill="none" />
+                  <path d={rightBevelPath} stroke="rgba(255,255,255,0.9)" strokeWidth="1.5" fill="none" />
                 </svg>
               )}
 
               {/* Zipper Pull (Airplane) */}
-              <div 
-                className="zipper-plane" 
-                style={{ 
+              <div
+                className="zipper-plane"
+                style={{
                   top: `${displayPlaneY}vh`,
                   opacity: planeOpacity,
                   transform: `translateX(-50%) translateY(-50%) scale(${planeScale})`,
@@ -291,7 +343,7 @@ export default function Home() {
                 }}
               >
                 <svg xmlns="http://www.w3.org/2000/svg" width="90" height="90" viewBox="0 0 24 24" fill="var(--primary-color)" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ transform: 'rotate(135deg)' }}>
-                  <path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.2-1.1.5l-1.8 1.8c-.2.2-.2.5 0 .7l7.5 3.5-3.5 3.5-4-1c-.3-.1-.6 0-.8.2l-1.8 1.8c-.2.2 0 .5.3.6l5.5 1.5 1.5 5.5c.1.3.4.5.6.3l1.8-1.8c.2-.2.3-.5.2-.8l-1-4 3.5-3.5 3.5 7.5c.2.2.5.2.7 0l1.8-1.8c.3-.2.6-.6.5-1.1z"/>
+                  <path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.2-1.1.5l-1.8 1.8c-.2.2-.2.5 0 .7l7.5 3.5-3.5 3.5-4-1c-.3-.1-.6 0-.8.2l-1.8 1.8c-.2.2 0 .5.3.6l5.5 1.5 1.5 5.5c.1.3.4.5.6.3l1.8-1.8c.2-.2.3-.5.2-.8l-1-4 3.5-3.5 3.5 7.5c.2.2.5.2.7 0l1.8-1.8c.3-.2.6-.6.5-1.1z" />
                 </svg>
               </div>
             </div>
