@@ -6,18 +6,47 @@ export default function Home() {
       {/* Left Side - Vibrant & Playful */}
       <div className="split-left">
         <div className="characters-container">
-          {/* Blinking Character */}
+          {/* Airplane Logo */}
           <div className="character char-1">
-            <div className="eyes-container">
-              <div className="eye"></div>
-              <div className="eye"></div>
-            </div>
-            <div className="smile"></div>
+            <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.2-1.1.5l-1.8 1.8c-.2.2-.2.5 0 .7l7.5 3.5-3.5 3.5-4-1c-.3-.1-.6 0-.8.2l-1.8 1.8c-.2.2 0 .5.3.6l5.5 1.5 1.5 5.5c.1.3.4.5.6.3l1.8-1.8c.2-.2.3-.5.2-.8l-1-4 3.5-3.5 3.5 7.5c.2.2.5.2.7 0l1.8-1.8c.3-.2.6-.6.5-1.1z"/>
+            </svg>
           </div>
 
-          <div className="character char-2"></div>
-          <div className="character char-3"></div>
-          <div className="character char-4"></div>
+          {/* Train Logo */}
+          <div className="character char-2">
+            <svg xmlns="http://www.w3.org/2000/svg" width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="4" y="3" width="16" height="16" rx="2" />
+              <path d="M4 11h16" />
+              <path d="M12 3v8" />
+              <path d="M8 19l-2 3" />
+              <path d="M16 19l2 3" />
+              <circle cx="8" cy="15" r="1.5" fill="white" />
+              <circle cx="16" cy="15" r="1.5" fill="white" />
+            </svg>
+          </div>
+
+          {/* Bus Logo */}
+          <div className="character char-3">
+            <svg xmlns="http://www.w3.org/2000/svg" width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="2" y="6" width="20" height="12" rx="2" />
+              <path d="M2 12h20" />
+              <path d="M6 18v2" />
+              <path d="M18 18v2" />
+              <circle cx="8" cy="14" r="1.5" fill="white" />
+              <circle cx="16" cy="14" r="1.5" fill="white" />
+              <path d="M8 10h0" />
+              <path d="M16 10h0" />
+            </svg>
+          </div>
+
+          {/* Map Pin Logo */}
+          <div className="character char-4">
+            <svg xmlns="http://www.w3.org/2000/svg" width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0" />
+              <circle cx="12" cy="10" r="3" />
+            </svg>
+          </div>
         </div>
       </div>
 
