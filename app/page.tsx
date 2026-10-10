@@ -1,6 +1,9 @@
 'use client';
 
+import { useRouter } from 'next/navigation';
+
 export default function Home() {
+  const router = useRouter();
   return (
     <div className="split-container">
       {/* Left Side - Vibrant & Playful */}
@@ -68,7 +71,7 @@ export default function Home() {
 
           <div className="divider">or</div>
 
-          <form onSubmit={(e) => e.preventDefault()}>
+          <form onSubmit={(e) => { e.preventDefault(); router.push('/home'); }}>
             <div className="input-group">
               <label htmlFor="email">Email</label>
               <input type="email" id="email" placeholder="Enter your email" />
