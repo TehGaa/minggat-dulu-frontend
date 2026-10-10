@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import HomePage from './home/page';
+import PreferencesPage from './preferences/page';
 
 export default function Home() {
   const router = useRouter();
@@ -10,6 +11,7 @@ export default function Home() {
   const [showLogin, setShowLogin] = useState(true);
   const [elapsed, setElapsed] = useState<number | null>(null);
   const [winSize, setWinSize] = useState({ w: 1000, h: 1000 });
+  const [nextRoute, setNextRoute] = useState('/home');
 
   useEffect(() => {
     if (showLogin) {
@@ -26,6 +28,10 @@ export default function Home() {
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
+
+    // TODO: Determine if user is first-time here (e.g. from backend response)
+    // setNextRoute(isFirstTime ? '/preferences' : '/home');
+
     setIsLoggingIn(true);
 
     let start: number | null = null;
@@ -35,11 +41,11 @@ export default function Home() {
       const currentElapsed = time - start;
       setElapsed(currentElapsed);
 
-      if (currentElapsed < 2800) {
+      if (currentElapsed < 2500) {
         requestAnimationFrame(animate);
       } else {
         setShowLogin(false);
-        router.push('/home');
+        router.push(nextRoute);
       }
     };
     requestAnimationFrame(animate);
@@ -155,9 +161,9 @@ export default function Home() {
 
   return (
     <main style={{ minHeight: '100vh', position: 'relative' }}>
-      {/* Background Home Page (Z-Index 1) */}
+      {/* Background Page (Z-Index 1) - Dynamically Renders */}
       <div style={{ position: 'relative', zIndex: 1, pointerEvents: showLogin ? 'none' : 'auto' }}>
-        <HomePage />
+        {nextRoute === '/preferences' ? <PreferencesPage /> : <HomePage />}
       </div>
 
       {/* Foreground Login Overlay (Z-Index 50) */}

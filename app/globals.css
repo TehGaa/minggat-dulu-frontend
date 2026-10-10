@@ -1,10 +1,10 @@
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap');
 
 :root {
-  --primary-color: #6366f1;
-  --bg-left: #f3f4f6;
+  --primary-color: #D85C41;
+  --bg-left: #F9F7F4;
   --bg-right: #ffffff;
-  --text-dark: #1f2937;
+  --text-dark: #1E3F40;
   --text-light: #6b7280;
   --border-color: #e5e7eb;
 }
@@ -32,7 +32,7 @@ body {
 
 .split-left {
   flex: 1;
-  background: linear-gradient(135deg, #e0e7ff 0%, #fbcfe8 100%);
+  background-color: var(--bg-left);
   position: relative;
   display: flex;
   align-items: center;
@@ -53,9 +53,11 @@ body {
   .split-container {
     flex-direction: column;
   }
+
   .split-left {
     min-height: 40vh;
   }
+
   .split-right {
     min-height: 60vh;
   }
@@ -96,13 +98,13 @@ body {
   transition: all 0.2s ease;
   margin-bottom: 1.5rem;
   font-family: inherit;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
 }
 
 .google-btn:hover {
   background-color: #f9fafb;
   transform: translateY(-1px);
-  box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
 }
 
 .google-btn img {
@@ -212,7 +214,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  filter: drop-shadow(0 10px 15px rgba(0,0,0,0.1));
+  filter: drop-shadow(0 10px 15px rgba(0, 0, 0, 0.1));
 }
 
 .char-1 {
@@ -264,21 +266,28 @@ body {
   0% {
     transform: translateY(0px) rotate(0deg);
   }
+
   50% {
     transform: translateY(-20px) rotate(5deg);
   }
+
   100% {
     transform: translateY(0px) rotate(0deg);
   }
 }
 
 @keyframes blink {
-  0%, 96%, 98% {
+
+  0%,
+  96%,
+  98% {
     transform: scaleY(1);
   }
+
   97% {
     transform: scaleY(0.1);
   }
+
   100% {
     transform: scaleY(1);
   }
@@ -290,9 +299,11 @@ body {
   0% {
     transform: translateY(0px) rotate(15deg);
   }
+
   50% {
     transform: translateY(-25px) rotate(25deg);
   }
+
   100% {
     transform: translateY(0px) rotate(15deg);
   }
@@ -332,7 +343,20 @@ body {
 .navbar-transparent .currency-selector,
 .navbar-transparent .nav-btn,
 .navbar-transparent .nav-tab {
-  color: white;
+  color: #FFFFFF;
+}
+
+.navbar-transparent .brand-logo-svg {
+  fill: #FFFFFF;
+}
+
+.navbar-transparent .brand-text-minggat,
+.navbar-transparent .brand-text-dulu {
+  color: #FFFFFF;
+}
+
+.navbar-transparent .nav-btn.logout-btn {
+  color: #FFFFFF !important;
 }
 
 .navbar-transparent .currency-selector:hover,
@@ -359,8 +383,23 @@ body {
 .navbar-brand {
   font-size: 1.5rem;
   font-weight: 700;
-  color: var(--primary-color);
+  /* Colors are now handled by child spans */
   letter-spacing: -0.025em;
+}
+
+.brand-logo-svg {
+  fill: var(--primary-color);
+  transition: fill 0.3s ease;
+}
+
+.brand-text-minggat {
+  color: var(--text-dark);
+  transition: color 0.3s ease;
+}
+
+.brand-text-dulu {
+  color: var(--primary-color);
+  transition: color 0.3s ease;
 }
 
 .navbar-actions {
@@ -408,11 +447,11 @@ body {
 }
 
 .nav-btn.logout-btn {
-  color: #ef4444;
+  color: #A93226;
 }
 
 .nav-btn.logout-btn:hover {
-  background-color: #fef2f2;
+  background-color: #FDF2E9;
 }
 
 .navbar-bottom {
@@ -507,14 +546,14 @@ body {
   color: white;
   font-weight: 700;
   margin-bottom: 2rem;
-  text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
 .search-widget {
   background: white;
   padding: 1.5rem;
   border-radius: 16px;
-  box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
 }
 
 .search-row {
@@ -580,7 +619,7 @@ body {
 }
 
 .search-submit-btn:hover {
-  background-color: #4f46e5;
+  background-color: #C04A30;
   transform: scale(1.05);
 }
 
@@ -592,6 +631,7 @@ body {
   .search-row {
     flex-direction: column;
   }
+
   .search-submit-btn {
     width: 100%;
     height: 50px;
@@ -614,7 +654,8 @@ body {
 .zipper-plane {
   position: fixed;
   left: 50%;
-  transform: translateX(-50%) translateY(-50%); /* Center exactly on the Y coordinate */
+  transform: translateX(-50%) translateY(-50%);
+  /* Center exactly on the Y coordinate */
   z-index: 9999;
   pointer-events: none;
 }

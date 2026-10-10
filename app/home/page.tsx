@@ -21,8 +21,31 @@ export default function HomePage() {
       <nav className={`sticky-navbar ${isScrolled ? 'navbar-solid' : 'navbar-transparent'}`}>
         {/* Top Section */}
         <div className="navbar-top">
-          <div className="navbar-brand">
-            Minggat Dulu
+          <div className="navbar-brand" style={{ display: 'grid' }}>
+            {/* White Logo (State 1: Transparent Navbar) */}
+            <img 
+              src="/img/minggat_dulu_black_screen_removed_bg.png" 
+              alt="Minggat Dulu Logo"
+              style={{
+                gridArea: '1 / 1',
+                height: '44px',
+                width: 'auto',
+                opacity: isScrolled ? 0 : 1,
+                transition: 'opacity 0.3s ease'
+              }}
+            />
+            {/* Color Logo (State 2: Solid Navbar) */}
+            <img 
+              src="/img/minggat_dulu_green_screen_removed_bg.png" 
+              alt="Minggat Dulu Logo"
+              style={{
+                gridArea: '1 / 1',
+                height: '44px',
+                width: 'auto',
+                opacity: isScrolled ? 1 : 0,
+                transition: 'opacity 0.3s ease'
+              }}
+            />
           </div>
           <div className="navbar-actions">
             <div className="currency-selector">
@@ -32,11 +55,11 @@ export default function HomePage() {
             <Link href="/" className="nav-btn logout-btn">Logout</Link>
           </div>
         </div>
-        
+
         {/* Bottom Section */}
         <div className="navbar-bottom">
           {['Flights', 'Trains', 'Bus'].map((tab) => (
-            <button 
+            <button
               key={tab}
               className={`nav-tab ${activeTab === tab ? 'active' : ''}`}
               onClick={() => setActiveTab(tab)}
@@ -51,7 +74,7 @@ export default function HomePage() {
       <section className="hero-section">
         <div className="hero-content">
           <h1 className="hero-title">Where are you traveling next?</h1>
-          
+
           <div className="search-widget">
             <div className="search-row">
               {/* Location Inputs (Left Side) */}
@@ -100,10 +123,10 @@ export default function HomePage() {
       {/* Main Content Area */}
       <main className="home-content">
         <h2>Explore popular destinations</h2>
-        
+
         {/* Placeholder content to demonstrate scroll and sticky navbar */}
-        <div style={{ marginTop: '2rem', height: '100vh', background: 'linear-gradient(to bottom right, #e0e7ff, #fbcfe8)', borderRadius: '24px', opacity: 0.6, display: 'flex', justifyContent: 'center', paddingTop: '4rem' }}>
-          <p style={{ color: '#4f46e5', fontWeight: 600, fontSize: '1.5rem' }}>Search results for {activeTab} will appear here...</p>
+        <div style={{ marginTop: '2rem', height: '100vh', backgroundColor: '#F9F7F4', borderRadius: '24px', display: 'flex', justifyContent: 'center', paddingTop: '4rem', border: '1px solid #e5e7eb' }}>
+          <p style={{ color: '#1E3F40', fontWeight: 600, fontSize: '1.5rem' }}>Search results for {activeTab} will appear here...</p>
         </div>
       </main>
     </div>
