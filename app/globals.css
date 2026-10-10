@@ -597,3 +597,24 @@ body {
     height: 50px;
   }
 }
+
+/* --- ZIPPER ANIMATION --- */
+.home-reveal-bg {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-image: url('https://images.unsplash.com/photo-1436491865332-7a61a109cc05?q=80&w=2074&auto=format&fit=crop');
+  background-size: cover;
+  background-position: center;
+  z-index: -1;
+}
+
+.zipper-plane {
+  position: fixed;
+  left: 50%;
+  transform: translateX(-50%) translateY(-50%); /* Center exactly on the Y coordinate */
+  z-index: 9999;
+  pointer-events: none;
+}
