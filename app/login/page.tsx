@@ -293,6 +293,18 @@ export default function Login() {
 										}} />
 										<span>Loading...</span>
 									</div>
+								</button> : isLoggingIn ? <button type="submit" className="submit-btn" disabled>
+									<div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+										<div style={{
+											width: '16px',
+											height: '16px',
+											borderRadius: '50%',
+											border: '2px solid white',
+											borderTopColor: 'transparent',
+											animation: 'spin 0.8s linear infinite'
+										}} />
+										<span>Waiting to unpack</span>
+									</div>
 								</button> : <button type="submit" className="submit-btn">
 									Sign In
 								</button>}

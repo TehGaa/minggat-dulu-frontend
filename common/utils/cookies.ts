@@ -1,5 +1,7 @@
 export interface CookieOptions {
   days?: number;
+  minutes?: number;
+  maxAge?: number;
   path?: string;
   domain?: string;
   secure?: boolean;
@@ -40,6 +42,8 @@ export const cookies = {
 
     const {
       days,
+      minutes,
+      maxAge,
       path = '/',
       domain,
       secure = typeof window !== 'undefined' && window.location.protocol === 'https:',
@@ -48,7 +52,13 @@ export const cookies = {
 
     let cookieStr = `${encodeURIComponent(name)}=${encodeURIComponent(value)}; path=${path}`;
 
-    if (days) {
+    if (maxAge !== undefined) {
+      cookieStr += `; max-age=${maxAge}`;
+    } else if (minutes !== undefined) {
+      const date = new Date();
+      date.setTime(date.getTime() + minutes * 60 * 1000);
+      cookieStr += `; expires=${date.toUTCString()}`;
+    } else if (days !== undefined) {
       const date = new Date();
       date.setTime(date.getTime() + days * 24 * 60 * 60 * 1000);
       cookieStr += `; expires=${date.toUTCString()}`;

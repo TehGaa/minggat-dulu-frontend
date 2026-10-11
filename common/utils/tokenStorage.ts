@@ -1,14 +1,39 @@
 import { cookies, CookieOptions } from './cookies';
 
 export const ACCESS_TOKEN_KEY = 'access_token';
+export const ACCESS_TOKEN_EXP_KEY = 'access_token_exp';
 export const REFRESH_TOKEN_KEY = 'refresh_token';
 
 export interface TokenOptions {
+  accessMinutes?: number;
   accessDays?: number;
   refreshDays?: number;
+  refreshMinutes?: number;
   path?: string;
   secure?: boolean;
   sameSite?: 'Strict' | 'Lax' | 'None';
+}
+
+function parseJwtExpiration(token: string): number | null {
+  try {
+    const parts = token.split('.');
+    if (parts.length !== 3) return null;
+    const base64Url = parts[1];
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    const jsonPayload = decodeURIComponent(
+      atob(base64)
+        .split('')
+        .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+        .join('')
+    );
+    const parsed = JSON.parse(jsonPayload);
+    if (typeof parsed.exp === 'number') {
+      return parsed.exp * 1000;
+    }
+  } catch {
+    // If not a valid JWT or cannot parse, safely ignore
+  }
+  return null;
 }
 
 export const tokenStorage = {
@@ -16,10 +41,57 @@ export const tokenStorage = {
     return cookies.get(ACCESS_TOKEN_KEY);
   },
 
+  getAccessTokenExpiry(): number | null {
+    const token = this.getAccessToken();
+    if (!token) return null;
+
+    // Check JWT payload first if present
+    const jwtExp = parseJwtExpiration(token);
+    if (jwtExp !== null) {
+      return jwtExp;
+    }
+
+    // Fall back to recorded expiration cookie
+    const storedExp = cookies.get(ACCESS_TOKEN_EXP_KEY);
+    if (storedExp) {
+      const expNum = parseInt(storedExp, 10);
+      if (!Number.isNaN(expNum)) {
+        return expNum;
+      }
+    }
+
+    return null;
+  },
+
+  getAccessTokenTimeRemaining(): number | null {
+    const expiry = this.getAccessTokenExpiry();
+    if (!expiry) return null;
+    return Math.max(0, expiry - Date.now());
+  },
+
   setAccessToken(token: string, options: CookieOptions = {}): void {
-    const days = options.days !== undefined ? options.days : 1;
+    const minutes =
+      options.minutes !== undefined
+        ? options.minutes
+        : options.days !== undefined
+          ? options.days * 24 * 60
+          : 15;
+
+    const expiryTime = Date.now() + minutes * 60 * 1000;
+
     cookies.set(ACCESS_TOKEN_KEY, token, {
-      days,
+      ...options,
+      minutes,
+      days: undefined,
+      path: options.path ?? '/',
+      secure: options.secure,
+      sameSite: options.sameSite ?? 'Lax',
+    });
+
+    cookies.set(ACCESS_TOKEN_EXP_KEY, expiryTime.toString(), {
+      ...options,
+      minutes,
+      days: undefined,
       path: options.path ?? '/',
       secure: options.secure,
       sameSite: options.sameSite ?? 'Lax',
@@ -28,6 +100,7 @@ export const tokenStorage = {
 
   removeAccessToken(options: Pick<CookieOptions, 'path' | 'domain'> = {}): void {
     cookies.remove(ACCESS_TOKEN_KEY, options);
+    cookies.remove(ACCESS_TOKEN_EXP_KEY, options);
   },
 
   getRefreshToken(): string | null {
@@ -37,6 +110,7 @@ export const tokenStorage = {
   setRefreshToken(token: string, options: CookieOptions = {}): void {
     const days = options.days !== undefined ? options.days : 7;
     cookies.set(REFRESH_TOKEN_KEY, token, {
+      ...options,
       days,
       path: options.path ?? '/',
       secure: options.secure,
@@ -47,7 +121,6 @@ export const tokenStorage = {
   removeRefreshToken(options: Pick<CookieOptions, 'path' | 'domain'> = {}): void {
     cookies.remove(REFRESH_TOKEN_KEY, options);
   },
-
 
   getTokens(): { access: string | null; refresh: string | null } {
     return {
@@ -60,14 +133,22 @@ export const tokenStorage = {
     tokens: { access: string; refresh: string },
     options: TokenOptions = {}
   ): void {
+    const accessMinutes =
+      options.accessMinutes !== undefined
+        ? options.accessMinutes
+        : options.accessDays !== undefined
+          ? options.accessDays * 24 * 60
+          : 15;
+
     this.setAccessToken(tokens.access, {
-      days: options.accessDays ?? 1,
+      minutes: accessMinutes,
       path: options.path,
       secure: options.secure,
       sameSite: options.sameSite,
     });
     this.setRefreshToken(tokens.refresh, {
-      days: options.refreshDays ?? 7,
+      days: options.refreshDays ?? (options.refreshMinutes !== undefined ? undefined : 7),
+      minutes: options.refreshMinutes,
       path: options.path,
       secure: options.secure,
       sameSite: options.sameSite,
@@ -82,7 +163,6 @@ export const tokenStorage = {
   hasAccessToken(): boolean {
     return Boolean(this.getAccessToken());
   },
-
 
   hasRefreshToken(): boolean {
     return Boolean(this.getRefreshToken());

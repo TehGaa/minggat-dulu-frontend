@@ -19,6 +19,7 @@ interface UserValidateData {
     register: (query: any) => Promise<void>;
     login: (query: any) => Promise<any>;
     logout: () => void;
+    refreshFunc: () => Promise<any>;
 }
 
 export const UserContext = createContext<UserValidateData>(
@@ -104,17 +105,16 @@ export const UserContextProvider: React.FC<ChildrenProps> = ({
             if (!response.ok) {
                 throw new Error('Logout failed');
             }
-
-            authStorage.clearSession();
-            setUser(undefined);
-            setAccess('');
-            setRefresh('');
-            setIsAuthenticated(false);
         }
         catch (error) {
             console.error('Login error:', error);
             throw error;
         }
+        authStorage.clearSession();
+        setUser(undefined);
+        setAccess('');
+        setRefresh('');
+        setIsAuthenticated(false);
     };
 
     const register = async (query: any) => {
@@ -160,6 +160,41 @@ export const UserContextProvider: React.FC<ChildrenProps> = ({
         }
     };
 
+    const refreshFunc = async () => {
+        try {
+            const response = await fetch('/api/auth/refresh', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ refresh_token: refresh }),
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data?.message || data?.detail || 'Refresh failed');
+            } else {
+                const access = data?.access || data?.accessToken || data?.access_token;
+                const refresh = data?.refresh || data?.refreshToken || data?.refresh_token;
+                const user = data?.user_data
+
+                if (access) {
+                    setAuthSession({
+                        access,
+                        refresh: refresh || '',
+                        user,
+                    });
+                }
+
+                return data;
+            }
+        } catch (error) {
+            console.error('Refresh error:', error);
+            throw error;
+        }
+    }
+
     if (isLoading) {
         return <SplashScreen />;
     }
@@ -178,6 +213,7 @@ export const UserContextProvider: React.FC<ChildrenProps> = ({
                 register,
                 login,
                 logout,
+                refreshFunc,
             }}
         >
             {children}
