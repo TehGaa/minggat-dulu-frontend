@@ -330,13 +330,17 @@ body {
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
 }
 
+.navbar-solid .navbar-top {
+  border-bottom: 1px solid #FFFFFF;
+}
+
 .navbar-transparent {
   background-color: transparent;
   box-shadow: none;
 }
 
 .navbar-transparent .navbar-top {
-  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .navbar-transparent .navbar-brand,
@@ -377,7 +381,8 @@ body {
   justify-content: space-between;
   align-items: center;
   padding: 1rem 2rem;
-  border-bottom: 1px solid var(--border-color);
+  border-bottom: 1px solid #FFFFFF;
+  transition: border-color 0.3s ease;
 }
 
 .navbar-brand {

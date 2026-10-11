@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-export async function GET(request: NextRequest) {
+export async function POST(request: NextRequest) {
     try {
         const body = await request.json().catch(() => ({}));
 
@@ -16,7 +16,12 @@ export async function GET(request: NextRequest) {
             `${backendBaseUrl.replace(/\/$/, '')}${logoutPath.startsWith('/') ? '' : '/'}${logoutPath}`;
 
         const backendResponse = await fetch(backendUrl, {
-            method: 'GET',
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+            },
+            body: JSON.stringify(body),
         });
 
         const responseText = await backendResponse.text();

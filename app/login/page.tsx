@@ -8,7 +8,7 @@ import { useUserContext } from '@/context/UserContext';
 
 export default function Login() {
 	const router = useRouter();
-	const { isAuthenticated, login } = useUserContext()
+	const { isAuthenticated, user, login } = useUserContext()
 	const [isLoggingIn, setIsLoggingIn] = useState(false);
 	const [showLogin, setShowLogin] = useState(true);
 	const [elapsed, setElapsed] = useState<number | null>(null);
@@ -39,8 +39,10 @@ export default function Login() {
 		e.preventDefault();
 
 		try {
-			await login({ email, password })
-			var isFirstTime = true
+			const data = await login({ email, password })
+
+			var isFirstTime = data.user?.avatar === null
+
 			setNextRoute(isFirstTime ? '/preferences' : '/');
 
 			setIsLoggingIn(true);

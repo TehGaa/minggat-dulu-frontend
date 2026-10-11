@@ -104,7 +104,7 @@ export default function PreferencesPage() {
 					</button>
 				</div>
 
-				<Link href="/home">
+				<Link href="/">
 					<button style={{
 						width: '100%',
 						padding: '1rem',
