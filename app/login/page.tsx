@@ -67,6 +67,7 @@ export default function Login() {
 			};
 			requestAnimationFrame(animate);
 		} catch (error: any) {
+			setIsLoading(false)
 			toast.error(error.message)
 		}
 	};
