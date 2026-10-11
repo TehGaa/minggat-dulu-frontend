@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import HomePage from '../page';
 import PreferencesPage from '../preferences/page';
 import { useUserContext } from '@/context/UserContext';
+import toast, { Toaster } from "react-hot-toast";
 
 export default function Login() {
 	const router = useRouter();
@@ -35,13 +36,13 @@ export default function Login() {
 		return () => window.removeEventListener('resize', handleResize);
 	}, [showLogin]);
 
-	const handleLogin = async (e: React.FormEvent) => {
+	const handleLogin = async (e: any) => {
 		e.preventDefault();
 
 		try {
 			const data = await login({ email, password })
 
-			var isFirstTime = data.user?.avatar === null
+			var isFirstTime = data.user_data?.avatar === null
 
 			setNextRoute(isFirstTime ? '/preferences' : '/');
 
@@ -62,8 +63,8 @@ export default function Login() {
 				}
 			};
 			requestAnimationFrame(animate);
-		} catch (error) {
-			console.log(error)
+		} catch (error: any) {
+			toast.error(error.message)
 		}
 	};
 

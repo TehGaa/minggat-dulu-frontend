@@ -43,8 +43,8 @@ export const UserContextProvider: React.FC<ChildrenProps> = ({
         initialized.current = true;
 
         const initAuth = async () => {
-            // Sleep for 3 seconds to display the loading splash screen
-            await new Promise((resolve) => setTimeout(resolve, 3000));
+            // Sleep for 1 second to display the loading splash screen
+            await new Promise((resolve) => setTimeout(resolve, 1000));
 
             const session = authStorage.loadSession();
 
@@ -142,11 +142,7 @@ export const UserContextProvider: React.FC<ChildrenProps> = ({
             } else {
                 const access = data?.access || data?.accessToken || data?.access_token;
                 const refresh = data?.refresh || data?.refreshToken || data?.refresh_token;
-                const user = data?.user || (data?.id !== undefined && data?.username ? {
-                    id: data.id,
-                    username: data.username,
-                    avatar: data.avatar ?? null,
-                } : undefined);
+                const user = data?.user_data
 
                 if (access) {
                     setAuthSession({
