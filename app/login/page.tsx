@@ -15,6 +15,7 @@ export default function Login() {
 	const [elapsed, setElapsed] = useState<number | null>(null);
 	const [winSize, setWinSize] = useState({ w: 1000, h: 1000 });
 	const [nextRoute, setNextRoute] = useState('/');
+	const [isLoading, setIsLoading] = useState(false);
 
 	const [email, setEmail] = useState("")
 	const [password, setPassword] = useState("")
@@ -40,7 +41,9 @@ export default function Login() {
 		e.preventDefault();
 
 		try {
+			setIsLoading(true)
 			const data = await login({ email, password })
+			setIsLoading(false)
 
 			var isFirstTime = data.user_data?.avatar === null
 
@@ -277,10 +280,22 @@ export default function Login() {
 									<label htmlFor="password">Password</label>
 									<input type="password" id="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" />
 								</div>
-
-								<button type="submit" className="submit-btn">
+								{isLoading ? <button type="submit" className="submit-btn" disabled>
+									<div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+										<div style={{
+											width: '16px',
+											height: '16px',
+											borderRadius: '50%',
+											border: '2px solid white',
+											borderTopColor: 'transparent',
+											animation: 'spin 0.8s linear infinite'
+										}} />
+										<span>Loading...</span>
+									</div>
+								</button> : <button type="submit" className="submit-btn">
 									Sign In
-								</button>
+								</button>}
+
 							</form>
 
 							<p className="signup-prompt">
