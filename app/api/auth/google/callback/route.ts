@@ -62,6 +62,14 @@ export async function GET(request: NextRequest) {
             maxAge: 24 * 60 * 60,
         });
 
+        response.cookies.set("user_data", data.user_data, {
+            httpOnly: false,
+            secure: true,
+            sameSite: "lax",
+            path: "/",
+            maxAge: 1 * 60,
+        });
+
         return response;
     } catch (error: any) {
         console.error('Google Oauth Callback Route Handler Error:', error);

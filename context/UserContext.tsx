@@ -2,7 +2,7 @@
 
 import ChildrenProps from '@/common/types/ChildrenProps';
 import { UserData } from '@/common/types/UserData';
-import { authStorage, tokenStorage, userStorage } from '@/common/utils';
+import { authStorage, cookies, tokenStorage, userStorage } from '@/common/utils';
 import { SplashScreen } from '@/module/SplashScreen';
 import { useRouter } from 'next/navigation';
 import { createContext, useContext, useEffect, useState, useRef } from 'react';
@@ -44,14 +44,23 @@ export const UserContextProvider: React.FC<ChildrenProps> = ({
         initialized.current = true;
 
         const initAuth = async () => {
-            // Sleep for 1 second to display the loading splash screen
-            await new Promise((resolve) => setTimeout(resolve, 1000));
 
             const session = authStorage.loadSession();
 
             if (session.access) {
                 setAccess(session.access);
                 setIsAuthenticated(true);
+
+                const userDataCookie = cookies.get('user_data');
+                if (userDataCookie) {
+                    try {
+                        const parsedUser = JSON.parse(userDataCookie);
+                        userStorage.setUser(parsedUser)
+                        setUser(parsedUser)
+                        cookies.remove('user_data');
+                    }
+                    catch (err) { }
+                }
             }
 
             if (session.user) {
