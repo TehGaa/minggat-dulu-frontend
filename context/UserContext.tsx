@@ -14,8 +14,8 @@ interface UserValidateData {
     isAuthenticated: boolean;
     isLoading: boolean;
     setUser: (user: UserData | undefined) => void;
-    setTokens: (tokens: { access: string; refresh: string }) => void;
-    setAuthSession: (session: { access: string; refresh: string; user?: UserData }) => void;
+    setTokens: (tokens: { access: string }) => void;
+    setAuthSession: (session: { access: string; user?: UserData }) => void;
     register: (query: any) => Promise<void>;
     login: (query: any) => Promise<any>;
     logout: () => void;
@@ -51,7 +51,6 @@ export const UserContextProvider: React.FC<ChildrenProps> = ({
 
             if (session.access) {
                 setAccess(session.access);
-                setRefresh(session.refresh || '');
                 setIsAuthenticated(true);
             }
 
@@ -65,20 +64,18 @@ export const UserContextProvider: React.FC<ChildrenProps> = ({
         initAuth();
     }, []);
 
-    const setAuthSession = (session: { access: string; refresh: string; user?: UserData }) => {
+    const setAuthSession = (session: { access: string; user?: UserData }) => {
         authStorage.saveSession(session);
         setAccess(session.access);
-        setRefresh(session.refresh);
         setIsAuthenticated(true);
         if (session.user) {
             setUser(session.user);
         }
     };
 
-    const handleSetTokens = (tokens: { access: string; refresh: string }) => {
+    const handleSetTokens = (tokens: { access: string }) => {
         tokenStorage.setTokens(tokens);
         setAccess(tokens.access);
-        setRefresh(tokens.refresh);
         setIsAuthenticated(true);
     };
 
@@ -141,13 +138,11 @@ export const UserContextProvider: React.FC<ChildrenProps> = ({
                 throw new Error(data?.message || data?.detail || 'Login failed');
             } else {
                 const access = data?.access || data?.accessToken || data?.access_token;
-                const refresh = data?.refresh || data?.refreshToken || data?.refresh_token;
                 const user = data?.user_data
 
                 if (access) {
                     setAuthSession({
                         access,
-                        refresh: refresh || '',
                         user,
                     });
                 }
@@ -167,7 +162,6 @@ export const UserContextProvider: React.FC<ChildrenProps> = ({
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ refresh_token: refresh }),
             });
 
             const data = await response.json();
@@ -176,13 +170,11 @@ export const UserContextProvider: React.FC<ChildrenProps> = ({
                 throw new Error(data?.message || data?.detail || 'Refresh failed');
             } else {
                 const access = data?.access || data?.accessToken || data?.access_token;
-                const refresh = data?.refresh || data?.refreshToken || data?.refresh_token;
-                const user = data?.user_data
+                const user = data?.user_data;
 
                 if (access) {
                     setAuthSession({
                         access,
-                        refresh: refresh || '',
                         user,
                     });
                 }
@@ -193,7 +185,7 @@ export const UserContextProvider: React.FC<ChildrenProps> = ({
             console.error('Refresh error:', error);
             throw error;
         }
-    }
+    };
 
     if (isLoading) {
         return <SplashScreen />;

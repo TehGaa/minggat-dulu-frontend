@@ -4,7 +4,6 @@ import { UserData } from '@/common/types/UserData';
 
 export interface AuthSessionData {
   access: string;
-  refresh: string;
   user?: UserData;
 }
 
@@ -14,7 +13,7 @@ export const authStorage = {
     tokenOptions?: TokenOptions
   ): void {
     tokenStorage.setTokens(
-      { access: session.access, refresh: session.refresh },
+      { access: session.access },
       tokenOptions
     );
     if (session.user) {
@@ -24,12 +23,10 @@ export const authStorage = {
 
   loadSession(): {
     access: string | null;
-    refresh: string | null;
     user: UserData | null;
   } {
     return {
       access: tokenStorage.getAccessToken(),
-      refresh: tokenStorage.getRefreshToken(),
       user: userStorage.getUser<UserData>(),
     };
   },

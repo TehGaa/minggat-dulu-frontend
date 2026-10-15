@@ -40,14 +40,14 @@ export async function GET(request: NextRequest) {
         }
 
         const response = NextResponse.redirect(
-            new URL("/dashboard", request.url)
+            new URL("/", request.url)
         );
 
         response.headers.set("Cache-Control", "no-store");
         response.headers.set("Referrer-Policy", "no-referrer");
 
         response.cookies.set("access_token", data.access_token, {
-            httpOnly: true,
+            httpOnly: false,
             secure: true,
             sameSite: "lax",
             path: "/",
@@ -58,7 +58,7 @@ export async function GET(request: NextRequest) {
             httpOnly: true,
             secure: true,
             sameSite: "lax",
-            path: "/api/auth/refresh",
+            path: "/",
             maxAge: 24 * 60 * 60,
         });
 

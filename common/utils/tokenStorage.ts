@@ -103,34 +103,18 @@ export const tokenStorage = {
     cookies.remove(ACCESS_TOKEN_EXP_KEY, options);
   },
 
-  getRefreshToken(): string | null {
-    return cookies.get(REFRESH_TOKEN_KEY);
-  },
-
-  setRefreshToken(token: string, options: CookieOptions = {}): void {
-    const days = options.days !== undefined ? options.days : 7;
-    cookies.set(REFRESH_TOKEN_KEY, token, {
-      ...options,
-      days,
-      path: options.path ?? '/',
-      secure: options.secure,
-      sameSite: options.sameSite ?? 'Lax',
-    });
-  },
-
   removeRefreshToken(options: Pick<CookieOptions, 'path' | 'domain'> = {}): void {
     cookies.remove(REFRESH_TOKEN_KEY, options);
   },
 
-  getTokens(): { access: string | null; refresh: string | null } {
+  getTokens(): { access: string | null } {
     return {
       access: this.getAccessToken(),
-      refresh: this.getRefreshToken(),
     };
   },
 
   setTokens(
-    tokens: { access: string; refresh: string },
+    tokens: { access: string; },
     options: TokenOptions = {}
   ): void {
     const accessMinutes =
@@ -146,13 +130,6 @@ export const tokenStorage = {
       secure: options.secure,
       sameSite: options.sameSite,
     });
-    this.setRefreshToken(tokens.refresh, {
-      days: options.refreshDays ?? (options.refreshMinutes !== undefined ? undefined : 7),
-      minutes: options.refreshMinutes,
-      path: options.path,
-      secure: options.secure,
-      sameSite: options.sameSite,
-    });
   },
 
   clearTokens(): void {
@@ -162,9 +139,5 @@ export const tokenStorage = {
 
   hasAccessToken(): boolean {
     return Boolean(this.getAccessToken());
-  },
-
-  hasRefreshToken(): boolean {
-    return Boolean(this.getRefreshToken());
   },
 };

@@ -40,7 +40,22 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    return NextResponse.json(data);
+    const refreshToken = data?.refresh_token || data?.refresh || data?.refreshToken;
+    const isProd = process.env.NODE_ENV === 'production';
+
+    const response = NextResponse.json(data);
+
+    if (refreshToken) {
+      response.cookies.set('refresh_token', refreshToken, {
+        httpOnly: true,
+        secure: isProd,
+        sameSite: 'lax',
+        path: '/',
+        maxAge: 24 * 60 * 60,
+      });
+    }
+
+    return response;
   } catch (error: any) {
     console.error('Login Route Handler Error:', error);
     return NextResponse.json(

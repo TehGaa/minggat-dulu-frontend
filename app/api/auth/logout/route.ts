@@ -2,7 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 
 export async function POST(request: NextRequest) {
     try {
+        const cookieRefreshToken = request.cookies.get('refresh_token')?.value;
         const body = await request.json().catch(() => ({}));
+        const refreshToken = cookieRefreshToken || body?.refresh_token;
 
         const backendBaseUrl =
             process.env.BACKEND_USER_SERVICE_URL ||
@@ -15,32 +17,20 @@ export async function POST(request: NextRequest) {
             process.env.BACKEND_USER_SERVICE_LOGOUT_URL ||
             `${backendBaseUrl.replace(/\/$/, '')}${logoutPath.startsWith('/') ? '' : '/'}${logoutPath}`;
 
-        const backendResponse = await fetch(backendUrl, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json',
-            },
-            body: JSON.stringify(body),
-        });
-
-        const responseText = await backendResponse.text();
-
-        let data: any = null;
-        try {
-            data = JSON.parse(responseText);
-        } catch {
-            data = { message: responseText.trim() || 'Logout failed' };
+        if (refreshToken) {
+            await fetch(backendUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                },
+                body: JSON.stringify({ refresh_token: refreshToken }),
+            }).catch((err) => console.error('Backend logout call error:', err));
         }
 
-        if (!backendResponse.ok) {
-            return NextResponse.json(
-                data || { message: 'Logout failed' },
-                { status: backendResponse.status }
-            );
-        }
-
-        return NextResponse.json(data);
+        const response = NextResponse.json({ message: 'Logout successful' });
+        response.cookies.delete('refresh_token');
+        return response;
     } catch (error: any) {
         console.error('Logout Route Handler Error:', error);
         return NextResponse.json(
