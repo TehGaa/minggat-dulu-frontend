@@ -4,6 +4,7 @@ import "./globals.css";
 import { UserContextProvider } from "@/context/UserContext";
 import ToastProvider from "@/module/ToasterProvider";
 import { RefreshContextProvider } from "@/context/RefreshContext";
+import { Footer } from "@/module/Footer";
 
 const geistSans = Geist({
 	variable: "--font-geist-sans",
@@ -31,6 +32,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
 					<RefreshContextProvider>
 						<ToastProvider />
 						{children}
+						<Footer />
 					</RefreshContextProvider>
 				</UserContextProvider>
 			</body>

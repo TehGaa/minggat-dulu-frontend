@@ -6,6 +6,7 @@ import HomePage from '../page';
 import PreferencesPage from '../preferences/page';
 import { useUserContext } from '@/context/UserContext';
 import toast, { Toaster } from "react-hot-toast";
+import Link from 'next/link';
 
 export default function Login() {
 	const router = useRouter();
@@ -34,7 +35,11 @@ export default function Login() {
 		setWinSize({ w: window.innerWidth, h: window.innerHeight });
 		const handleResize = () => setWinSize({ w: window.innerWidth, h: window.innerHeight });
 		window.addEventListener('resize', handleResize);
-		return () => window.removeEventListener('resize', handleResize);
+		return () => {
+			window.removeEventListener('resize', handleResize);
+			// Restore scrolling when leaving the login page (e.g. via the Terms/Privacy links).
+			document.body.style.overflow = '';
+		};
 	}, [showLogin]);
 
 	const handleLogin = async (e: any) => {
@@ -313,6 +318,12 @@ export default function Login() {
 
 							<p className="signup-prompt">
 								Don't have an account? <a href="#">Sign up</a>
+							</p>
+
+							<p className="auth-legal">
+								By continuing, you agree to our{' '}
+								<Link href="/terms" id="login-terms-link">Terms of Service</Link> and{' '}
+								<Link href="/privacy" id="login-privacy-link">Privacy Policy</Link>.
 							</p>
 						</div>
 					</div>
