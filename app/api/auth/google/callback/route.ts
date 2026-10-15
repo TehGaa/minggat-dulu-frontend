@@ -4,6 +4,8 @@ export async function GET(request: NextRequest) {
     try {
         const ticket = request.nextUrl.searchParams.get("ticket");
 
+        const apiKey = process.env.API_KEY || 'local';
+
         const backendBaseUrl =
             process.env.BACKEND_USER_SERVICE_URL ||
             process.env.NEXT_PUBLIC_BACKEND_USER_SERVICE_URL ||
@@ -20,6 +22,7 @@ export async function GET(request: NextRequest) {
             headers: {
                 'Content-Type': 'application/json',
                 'Accept': 'application/json',
+                'X-API-Key': apiKey,
             },
             body: JSON.stringify({ ticket }),
         });
