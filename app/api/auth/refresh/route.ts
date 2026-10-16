@@ -49,12 +49,13 @@ export async function POST(request: NextRequest) {
         const response = NextResponse.json(data);
 
         if (newRefreshToken) {
+            response.cookies.delete('refresh_token')
             response.cookies.set('refresh_token', newRefreshToken, {
                 httpOnly: true,
                 secure: isProd,
                 sameSite: 'lax',
                 path: '/',
-                maxAge: 7 * 24 * 60 * 60,
+                maxAge: 24 * 60 * 60,
             });
         }
 
