@@ -49,7 +49,10 @@ export async function POST(request: NextRequest) {
         const response = NextResponse.json(data);
 
         if (newRefreshToken) {
-            response.cookies.delete('refresh_token')
+            response.cookies.delete({
+                name: 'refresh_token',
+                path: '/',
+            });
             response.cookies.set('refresh_token', newRefreshToken, {
                 httpOnly: true,
                 secure: isProd,
