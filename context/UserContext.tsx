@@ -19,7 +19,7 @@ interface UserValidateData {
     register: (query: any) => Promise<void>;
     login: (query: any) => Promise<any>;
     logout: () => void;
-    refreshFunc: () => Promise<any>;
+    refreshFunc: (retries?: number, initialDelay?: number) => Promise<any>;
 }
 
 export const UserContext = createContext<UserValidateData>(
@@ -71,11 +71,13 @@ export const UserContextProvider: React.FC<ChildrenProps> = ({
                     if (newAccess && refreshData?.user_data) {
                         currentUser = refreshData.user_data;
                     }
-                } catch (err) {
-                    console.warn('Session restoration failed, clearing session:', err);
-                    authStorage.clearSession();
-                    currentUser = null;
-                    setIsAuthenticated(false);
+                } catch (err: any) {
+                    console.warn('Session restoration failed:', err);
+                    if (err?.status === 401 || err?.status === 403) {
+                        authStorage.clearSession();
+                        currentUser = null;
+                        setIsAuthenticated(false);
+                    }
                 }
             }
 
@@ -178,37 +180,55 @@ export const UserContextProvider: React.FC<ChildrenProps> = ({
         }
     };
 
-    const refreshFunc = async () => {
-        try {
-            const response = await fetch('/api/auth/refresh', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-            });
+    const refreshFunc = async (maxRetries = 3, initialDelay = 1000): Promise<any> => {
+        let attempt = 0;
 
-            const data = await response.json();
+        while (true) {
+            try {
+                const response = await fetch('/api/auth/refresh', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                });
 
-            if (!response.ok) {
-                const error: any = new Error(data?.message || data?.detail || 'Refresh failed');
-                error.status = response.status;
-                throw error;
-            } else {
-                const access = data?.access || data?.accessToken || data?.access_token;
-                const user = data?.user_data;
+                const data = await response.json().catch(() => ({}));
 
-                if (access) {
-                    setAuthSession({
-                        access,
-                        user,
-                    });
+                if (!response.ok) {
+                    const error: any = new Error(data?.message || data?.detail || 'Refresh failed');
+                    error.status = response.status;
+                    const isClientAuthError = response.status === 401 || response.status === 403;
+
+                    if (isClientAuthError || attempt >= maxRetries) {
+                        throw error;
+                    }
+
+                    console.warn(`[refreshFunc] Attempt ${attempt + 1} failed with status ${response.status} (likely cold start). Retrying...`);
+                } else {
+                    const access = data?.access || data?.accessToken || data?.access_token;
+                    const user = data?.user_data;
+
+                    if (access) {
+                        setAuthSession({
+                            access,
+                            user,
+                        });
+                    }
+
+                    return data;
+                }
+            } catch (error: any) {
+                if (error?.status === 401 || error?.status === 403 || attempt >= maxRetries) {
+                    console.error('Refresh error:', error);
+                    throw error;
                 }
 
-                return data;
+                console.warn(`[refreshFunc] Attempt ${attempt + 1} failed (${error?.message || error}). Retrying...`);
             }
-        } catch (error) {
-            console.error('Refresh error:', error);
-            throw error;
+
+            attempt++;
+            const backoff = initialDelay * Math.pow(1.5, attempt - 1);
+            await new Promise((resolve) => setTimeout(resolve, backoff));
         }
     };
 

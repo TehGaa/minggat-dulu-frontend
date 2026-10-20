@@ -31,7 +31,7 @@ export const RefreshContextProvider: React.FC<ChildrenProps> = ({ children }: Ch
                     await refreshFunc();
                 } catch (error: any) {
                     console.error('Auto refresh token failed:', error);
-                    if (error?.status === 401 || error?.status === 403 || error?.message?.includes('Refresh failed')) {
+                    if (error?.status === 401 || error?.status === 403) {
                         await logout();
                     }
                 } finally {
