@@ -70,7 +70,12 @@ export const tokenStorage = {
   },
 
   setAccessToken(token: string, options: CookieOptions = {}): void {
-    const minutes = 0.5
+    const minutes =
+      options.minutes !== undefined
+        ? options.minutes
+        : options.days !== undefined
+          ? options.days * 24 * 60
+          : 15;
 
     const expiryTime = Date.now() + minutes * 60 * 1000;
 

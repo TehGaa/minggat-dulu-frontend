@@ -59,6 +59,16 @@ export async function GET(request: NextRequest) {
                 path: "/",
                 maxAge: 15 * 60,
             });
+
+            const expiryTime = Date.now() + 15 * 60 * 1000;
+
+            response.cookies.set("access_token_exp", expiryTime.toString(), {
+                httpOnly: false,
+                secure: isProd,
+                sameSite: "lax",
+                path: "/",
+                maxAge: 15 * 60,
+            });
         }
 
         if (data.refresh_token) {
