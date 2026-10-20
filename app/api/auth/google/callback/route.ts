@@ -43,35 +43,48 @@ export async function GET(request: NextRequest) {
         }
 
         const response = NextResponse.redirect(
-            new URL("/", request.url)
+            new URL("/login?from=google", request.url)
         );
 
         response.headers.set("Cache-Control", "no-store");
         response.headers.set("Referrer-Policy", "no-referrer");
 
-        response.cookies.set("access_token", data.access_token, {
-            httpOnly: false,
-            secure: true,
-            sameSite: "lax",
-            path: "/",
-            maxAge: 15 * 60,
-        });
+        const isProd = process.env.NODE_ENV === 'production';
 
-        response.cookies.set("refresh_token", data.refresh_token, {
-            httpOnly: true,
-            secure: true,
-            sameSite: "lax",
-            path: "/",
-            maxAge: 24 * 60 * 60,
-        });
+        if (data.access_token) {
+            response.cookies.set("access_token", data.access_token, {
+                httpOnly: false,
+                secure: isProd,
+                sameSite: "lax",
+                path: "/",
+                maxAge: 15 * 60,
+            });
+        }
 
-        response.cookies.set("user_data", data.user_data, {
-            httpOnly: false,
-            secure: true,
-            sameSite: "lax",
-            path: "/",
-            maxAge: 1 * 60,
-        });
+        if (data.refresh_token) {
+            response.cookies.set("refresh_token", data.refresh_token, {
+                httpOnly: true,
+                secure: isProd,
+                sameSite: "lax",
+                path: "/",
+                maxAge: 24 * 60 * 60,
+            });
+        }
+
+        if (data.user_data) {
+            const userDataString =
+                typeof data.user_data === 'string'
+                    ? data.user_data
+                    : JSON.stringify(data.user_data);
+
+            response.cookies.set("user_data", userDataString, {
+                httpOnly: false,
+                secure: isProd,
+                sameSite: "lax",
+                path: "/",
+                maxAge: 1 * 60,
+            });
+        }
 
         return response;
     } catch (error: any) {

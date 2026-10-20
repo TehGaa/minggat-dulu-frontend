@@ -46,6 +46,7 @@ export const UserContextProvider: React.FC<ChildrenProps> = ({
         const initAuth = async () => {
 
             const session = authStorage.loadSession();
+            let currentUser = session.user;
 
             if (session.access) {
                 setAccess(session.access);
@@ -54,17 +55,17 @@ export const UserContextProvider: React.FC<ChildrenProps> = ({
                 const userDataCookie = cookies.get('user_data');
                 if (userDataCookie) {
                     try {
-                        const parsedUser = JSON.parse(userDataCookie);
-                        userStorage.setUser(parsedUser)
-                        setUser(parsedUser)
+                        const parsedUser = typeof userDataCookie === 'string' ? JSON.parse(userDataCookie) : userDataCookie;
+                        userStorage.setUser(parsedUser);
+                        currentUser = parsedUser;
                         cookies.remove('user_data');
                     }
                     catch (err) { }
                 }
             }
 
-            if (session.user) {
-                setUser(session.user);
+            if (currentUser) {
+                setUser(currentUser);
             }
 
             setIsLoading(false);

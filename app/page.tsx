@@ -11,7 +11,7 @@ export default function Home() {
 			{/* Dynamic Sticky Navbar */}
 			<Navbar
 				variant="auto"
-				tabs={['Flights', 'Trains', 'Bus']}
+				tabs={['Flights']}
 				activeTab={activeTab}
 				onTabChange={setActiveTab}
 			/>

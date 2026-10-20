@@ -1,16 +1,17 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import HomePage from '../page';
 import PreferencesPage from '../preferences/page';
 import { useUserContext } from '@/context/UserContext';
+import { userStorage, cookies } from '@/common/utils';
 import toast, { Toaster } from "react-hot-toast";
 import Link from 'next/link';
 
 export default function Login() {
 	const router = useRouter();
-	const { isAuthenticated, user, login } = useUserContext()
+	const { isAuthenticated, user, login } = useUserContext();
 	const [isLoggingIn, setIsLoggingIn] = useState(false);
 	const [showLogin, setShowLogin] = useState(true);
 	const [elapsed, setElapsed] = useState<number | null>(null);
@@ -18,14 +19,56 @@ export default function Login() {
 	const [nextRoute, setNextRoute] = useState('/');
 	const [isLoading, setIsLoading] = useState(false);
 
-	const [email, setEmail] = useState("")
-	const [password, setPassword] = useState("")
+	const [email, setEmail] = useState("");
+	const [password, setPassword] = useState("");
+
+	const hasAnimatedRef = useRef(false);
+	const animationFrameRef = useRef<number | null>(null);
+
+	const getCurrentUser = () => {
+		if (user) return user;
+		const storedUser = userStorage.getUser();
+		if (storedUser) return storedUser;
+		const rawCookie = cookies.get('user_data');
+		if (rawCookie) {
+			try {
+				return typeof rawCookie === 'string' ? JSON.parse(rawCookie) : rawCookie;
+			} catch { }
+		}
+		return null;
+	};
+
+	const startLoginAnimation = (targetRoute: string) => {
+		hasAnimatedRef.current = true;
+		setNextRoute(targetRoute);
+		setIsLoggingIn(true);
+
+		let start: number | null = null;
+
+		const animate = (time: number) => {
+			if (!start) start = time;
+			const currentElapsed = time - start;
+			setElapsed(currentElapsed);
+
+			if (currentElapsed < 2500) {
+				animationFrameRef.current = requestAnimationFrame(animate);
+			} else {
+				setShowLogin(false);
+				router.push(targetRoute);
+			}
+		};
+		animationFrameRef.current = requestAnimationFrame(animate);
+	};
 
 	useEffect(() => {
-		if (isAuthenticated) {
-			router.push(nextRoute)
-		}
+		return () => {
+			if (animationFrameRef.current) {
+				cancelAnimationFrame(animationFrameRef.current);
+			}
+		};
+	}, []);
 
+	useEffect(() => {
 		if (showLogin) {
 			document.body.style.overflow = 'hidden';
 		} else {
@@ -37,10 +80,40 @@ export default function Login() {
 		window.addEventListener('resize', handleResize);
 		return () => {
 			window.removeEventListener('resize', handleResize);
-			// Restore scrolling when leaving the login page (e.g. via the Terms/Privacy links).
 			document.body.style.overflow = '';
 		};
 	}, [showLogin]);
+
+	useEffect(() => {
+		const searchParams = new URLSearchParams(window.location.search);
+		const errorParam = searchParams.get('error');
+		if (errorParam === 'oauth') {
+			toast.error('Google login failed. Please try again.');
+			window.history.replaceState({}, '', '/login');
+			return;
+		}
+
+		const isFromGoogle = searchParams.get('from') === 'google';
+
+		if (isFromGoogle) {
+			if (hasAnimatedRef.current) return;
+
+			window.history.replaceState({}, '', '/login');
+
+			const currentUser = getCurrentUser();
+			const isFirstTime = currentUser ? currentUser.avatar === null : false;
+			const targetRoute = isFirstTime ? '/preferences' : '/';
+
+			startLoginAnimation(targetRoute);
+			return;
+		}
+
+		if (isAuthenticated && !isLoggingIn && !hasAnimatedRef.current) {
+			const currentUser = getCurrentUser();
+			const isFirstTime = currentUser ? currentUser.avatar === null : false;
+			router.push(isFirstTime ? '/preferences' : '/');
+		}
+	}, [isAuthenticated, user, isLoggingIn, router]);
 
 	const handleGoogleLogin = () => {
 		const backendUrl =
@@ -54,34 +127,17 @@ export default function Login() {
 		e.preventDefault();
 
 		try {
-			setIsLoading(true)
-			const data = await login({ email, password })
-			setIsLoading(false)
+			setIsLoading(true);
+			const data = await login({ email, password });
+			setIsLoading(false);
 
-			var isFirstTime = data.user_data?.avatar === null
+			const isFirstTime = data?.user_data?.avatar === null;
+			const targetRoute = isFirstTime ? '/preferences' : '/';
 
-			setNextRoute(isFirstTime ? '/preferences' : '/');
-
-			setIsLoggingIn(true);
-
-			let start: number | null = null;
-
-			const animate = (time: number) => {
-				if (!start) start = time;
-				const currentElapsed = time - start;
-				setElapsed(currentElapsed);
-
-				if (currentElapsed < 2500) {
-					requestAnimationFrame(animate);
-				} else {
-					setShowLogin(false);
-					router.push(nextRoute);
-				}
-			};
-			requestAnimationFrame(animate);
+			startLoginAnimation(targetRoute);
 		} catch (error: any) {
-			setIsLoading(false)
-			toast.error(error.message)
+			setIsLoading(false);
+			toast.error(error.message);
 		}
 	};
 
