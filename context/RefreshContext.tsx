@@ -25,13 +25,15 @@ export const RefreshContextProvider: React.FC<ChildrenProps> = ({ children }: Ch
 
             const remaining = tokenStorage.getAccessTokenTimeRemaining();
 
-            if (remaining !== null && remaining <= ONE_MINUTE_MS) {
+            if (remaining === null || remaining <= ONE_MINUTE_MS) {
                 try {
                     isRefreshing.current = true;
                     await refreshFunc();
-                } catch (error) {
-                    await logout()
+                } catch (error: any) {
                     console.error('Auto refresh token failed:', error);
+                    if (error?.status === 401 || error?.status === 403 || error?.message?.includes('Refresh failed')) {
+                        await logout();
+                    }
                 } finally {
                     isRefreshing.current = false;
                 }
@@ -42,8 +44,21 @@ export const RefreshContextProvider: React.FC<ChildrenProps> = ({ children }: Ch
 
         const interval = setInterval(checkAndRefreshToken, CHECK_INTERVAL_MS);
 
-        return () => clearInterval(interval);
-    }, [isAuthenticated, refreshFunc]);
+        const handleVisibilityOrFocus = () => {
+            if (typeof document !== 'undefined' && document.visibilityState === 'visible') {
+                checkAndRefreshToken();
+            }
+        };
+
+        document.addEventListener('visibilitychange', handleVisibilityOrFocus);
+        window.addEventListener('focus', handleVisibilityOrFocus);
+
+        return () => {
+            clearInterval(interval);
+            document.removeEventListener('visibilitychange', handleVisibilityOrFocus);
+            window.removeEventListener('focus', handleVisibilityOrFocus);
+        };
+    }, [isAuthenticated, refreshFunc, logout]);
 
     return (
         <RefreshContext.Provider value={{}}>

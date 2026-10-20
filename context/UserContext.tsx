@@ -44,28 +44,45 @@ export const UserContextProvider: React.FC<ChildrenProps> = ({
         initialized.current = true;
 
         const initAuth = async () => {
-
             const session = authStorage.loadSession();
             let currentUser = session.user;
 
-            if (session.access) {
-                setAccess(session.access);
-                setIsAuthenticated(true);
+            const userDataCookie = cookies.get('user_data');
+            if (userDataCookie) {
+                try {
+                    const parsedUser = typeof userDataCookie === 'string' ? JSON.parse(userDataCookie) : userDataCookie;
+                    userStorage.setUser(parsedUser);
+                    currentUser = parsedUser;
+                    cookies.remove('user_data');
+                }
+                catch (err) { }
+            }
 
-                const userDataCookie = cookies.get('user_data');
-                if (userDataCookie) {
-                    try {
-                        const parsedUser = typeof userDataCookie === 'string' ? JSON.parse(userDataCookie) : userDataCookie;
-                        userStorage.setUser(parsedUser);
-                        currentUser = parsedUser;
-                        cookies.remove('user_data');
+            const remaining = tokenStorage.getAccessTokenTimeRemaining();
+            const hasValidAccessToken = Boolean(session.access && remaining !== null && remaining > 60 * 1000);
+
+            if (hasValidAccessToken) {
+                setAccess(session.access!);
+                setIsAuthenticated(true);
+            } else if (session.access || currentUser) {
+                try {
+                    const refreshData = await refreshFunc();
+                    const newAccess = refreshData?.access || refreshData?.accessToken || refreshData?.access_token;
+                    if (newAccess && refreshData?.user_data) {
+                        currentUser = refreshData.user_data;
                     }
-                    catch (err) { }
+                } catch (err) {
+                    console.warn('Session restoration failed, clearing session:', err);
+                    authStorage.clearSession();
+                    currentUser = null;
+                    setIsAuthenticated(false);
                 }
             }
 
             if (currentUser) {
                 setUser(currentUser);
+            } else {
+                setUser(undefined);
             }
 
             setIsLoading(false);
@@ -101,27 +118,23 @@ export const UserContextProvider: React.FC<ChildrenProps> = ({
 
     const logout = async () => {
         try {
-            const response = await fetch('/api/auth/logout', {
+            await fetch('/api/auth/logout', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({ refresh_token: refresh }),
             });
-
-            if (!response.ok) {
-                throw new Error('Logout failed');
-            }
         }
         catch (error) {
-            console.error('Login error:', error);
-            throw error;
+            console.error('Logout error:', error);
+        } finally {
+            authStorage.clearSession();
+            setUser(undefined);
+            setAccess('');
+            setRefresh('');
+            setIsAuthenticated(false);
         }
-        authStorage.clearSession();
-        setUser(undefined);
-        setAccess('');
-        setRefresh('');
-        setIsAuthenticated(false);
     };
 
     const register = async (query: any) => {
@@ -177,7 +190,9 @@ export const UserContextProvider: React.FC<ChildrenProps> = ({
             const data = await response.json();
 
             if (!response.ok) {
-                throw new Error(data?.message || data?.detail || 'Refresh failed');
+                const error: any = new Error(data?.message || data?.detail || 'Refresh failed');
+                error.status = response.status;
+                throw error;
             } else {
                 const access = data?.access || data?.accessToken || data?.access_token;
                 const user = data?.user_data;
