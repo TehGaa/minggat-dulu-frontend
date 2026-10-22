@@ -2,9 +2,19 @@
 
 import React, { useState } from 'react';
 import { Navbar } from '@/module/Navbar';
+import { DatePickerInput } from '@mantine/dates';
+import { useMediaQuery } from '@mantine/hooks';
+import dayjs from 'dayjs';
 
 export default function Home() {
 	const [activeTab, setActiveTab] = useState('Flights');
+	// [departure, arrival] as 'YYYY-MM-DD' strings
+	const [dateRange, setDateRange] = useState<[string | null, string | null]>([null, null]);
+	const isMobile = useMediaQuery('(max-width: 768px)');
+
+	// Selectable window: today until the end of next month
+	const minDate = dayjs().startOf('day').toDate();
+	const maxDate = dayjs().add(1, 'month').endOf('month').toDate();
 
 	return (
 		<div className="home-container">
@@ -44,13 +54,23 @@ export default function Home() {
 							{/* Date Inputs (Right Side) */}
 							<div className="search-group date-group">
 								<div className="search-field">
-									<label>Departure</label>
-									<input type="date" />
-								</div>
-								<div className="search-divider">|</div>
-								<div className="search-field">
-									<label>Return</label>
-									<input type="date" />
+									<label>Departure – Arrival</label>
+									<DatePickerInput
+										type="range"
+										variant="unstyled"
+										placeholder="Select dates"
+										value={dateRange}
+										onChange={setDateRange}
+										numberOfColumns={isMobile ? 1 : 2}
+										dropdownType={isMobile ? 'modal' : 'popover'}
+										minDate={minDate}
+										maxDate={maxDate}
+										maxLevel="month"
+										allowSingleDateInRange
+										valueFormat="ddd, D MMM YYYY"
+										popoverProps={{ position: 'bottom-end' }}
+										clearable
+									/>
 								</div>
 							</div>
 

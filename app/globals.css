@@ -601,6 +601,28 @@ body {
   width: 100%;
 }
 
+/* Mantine DatePickerInput: strip its built-in height/padding/margins so it
+   matches the plain inputs next to it */
+.search-field .mantine-InputWrapper-root,
+.search-field .mantine-Input-wrapper {
+  margin: 0;
+}
+
+.search-field .mantine-DatePickerInput-input {
+  height: auto;
+  min-height: 0;
+  padding: 0;
+  line-height: normal;
+  font-size: 1rem;
+  font-weight: 500;
+  color: var(--text-dark);
+  cursor: pointer;
+}
+
+.search-field .mantine-DatePickerInput-section {
+  width: auto;
+}
+
 .search-divider {
   color: #cbd5e1;
   margin: 0 1rem;
