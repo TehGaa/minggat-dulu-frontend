@@ -14,7 +14,7 @@ export default function Home() {
 
 	// Selectable window: today until the end of next month
 	const minDate = dayjs().startOf('day').toDate();
-	const maxDate = dayjs().add(1, 'month').endOf('month').toDate();
+	const maxDate = dayjs().month(12).endOf('month').toDate();
 
 	return (
 		<div className="home-container">
